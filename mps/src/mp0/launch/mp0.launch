@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<launch>
+  <arg default="false" name="paused"></arg>
+  <arg default="true" name="use_sim_time"></arg>
+  <arg default="true" name="gui"></arg>
+  <arg default="false" name="headless"></arg>
+  <arg default="false" name="debug"></arg>
+  <include file="$(find gazebo_ros)/launch/empty_world.launch">
+    <arg name="world_name" value="$(find mp0)/worlds/mp0.world"></arg>
+    <arg name="debug" value="$(arg debug)"></arg>
+    <arg name="gui" value="$(arg gui)"></arg>
+    <arg name="paused" value="$(arg paused)"></arg>
+    <arg name="use_sim_time" value="$(arg use_sim_time)"></arg>
+    <arg name="headless" value="$(arg headless)"></arg>
+    <arg name="verbose" value="false"></arg>
+  </include>
+  <!-- Spawn the GEM CAR -->
+  <include file="$(find gem_gazebo)/launch/gem_vehicle.launch">
+    <!-- <arg name="namespace" value="/gem"/> -->
+    <arg name="x" value="0.0"></arg>
+    <arg name="y" value="0.0"></arg>
+    <arg name="z" value="1.0"></arg>
+  </include>
+  <!-- RViz -->
+  <arg default="true" name="rviz"></arg>
+  <node args="-d $(find mp0)/rviz/mp0.rviz" if="$(arg rviz)" name="$(anon rviz)" output="screen" pkg="rviz" respawn="false" type="rviz"></node>
+</launch>
