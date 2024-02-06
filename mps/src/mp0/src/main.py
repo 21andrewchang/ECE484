@@ -11,6 +11,9 @@ from positionDetector import PositionDetector
 from safetyDetector import SafetyDetector
 
 import numpy as np
+import matplotlib.pyplot as plt
+import os
+import pandas as pd
 
 def getStoppingPoint(carPos, pedPos, stopDistance=1):
     carPos = np.array([carPos.pose.position.x, carPos.pose.position.y])
@@ -61,6 +64,12 @@ def run_model(d_safe = 15,v_0 = 10, a_b = 5, t_react = 0):
 
     unsafe_time = -0.01
     
+    # record the position of AV and pedestrain
+    t = [0]
+    x1 = []
+    x2 = []
+    d = []
+    
     while not rospy.is_shutdown():
         rate.sleep()  # Wait a while before trying to get a new state
 
@@ -77,9 +86,13 @@ def run_model(d_safe = 15,v_0 = 10, a_b = 5, t_react = 0):
 
         # detect the position of the pedestrian in the image
         pedImgPosition = posDetector.getPosition()
-
         # Compute the distance between pedestrian and vehicle. Check if vehilce is within safety distance from the pedestrian
         safe, pedPosition, distance = safety.checkSafety(currState, pedImgPosition)
+
+        t.append(t[-1] + 0.01)
+        x1.append(currState.pose.position.x)
+        x2.append(pedPosition[0] if pedPosition != 0 else 0)
+        d.append(distance if distance != None else 0) 
 
         # Print current position of the vehicle
         # print(safe,distance,currState.pose.position.x,currState.pose.position.y)
@@ -116,8 +129,44 @@ def run_model(d_safe = 15,v_0 = 10, a_b = 5, t_react = 0):
 
             if model.stopped:
                 rospy.signal_shutdown('Vehicle Stopped')
+                
+
+    # Problem 5 plot x1, x2, d respect to t
+    vars5 = f"dsense-{d_sense}_v0-{v_0}_ab-{a_b}_treact-{t_react}"
+    problem_saved_dir = f'{os.getcwd()}/problem-answer'
+    if not os.path.isdir(problem_saved_dir):
+        os.mkdir(problem_saved_dir)
+    plt.plot(t[1:], x1, label='x1')
+    plt.plot(t[1:], x2, label='x2')
+    plt.title(f'Problem 5')
+    plt.xlabel('Time t (sec)')
+    plt.ylabel('Variables')
+    plt.legend()
+    plt.savefig(f"{problem_saved_dir}/problem_5_{vars5}.png")
+    
+    # Problem 6 plot final d(t)
+    vars6 = f"dsense-{d_sense}_ab-{a_b}_treact-{t_react}"
+    problem_6_path = f"{problem_saved_dir}/problem_6_{vars6}.xlsx"
+    last_d_idx = np.where(np.array(d) != 0)[0][-1]
+    last_d = np.array(d)[last_d_idx]
+    data = None
+    if not os.path.isfile(problem_6_path):
+        data = np.array([[v_0, last_d]])
+    else:
+        data = pd.read_excel(problem_6_path).to_numpy()
+        data = np.append(data, np.array([[v_0, last_d]]), axis=0)
+        data = np.sort(data, axis=0)
+    pd.DataFrame(data, columns=['v_0', 'd(t)']).to_excel(problem_6_path, index=False)
+    plt.cla()
+    plt.plot(data[:, 0], data[:, 1], 'ro')
+    plt.plot(data[:, 0], data[:, 1], 'k--')
+    plt.title('Problem 6')
+    plt.xlabel('v_0')
+    plt.ylabel('d(t)')
+    plt.savefig(f"{problem_saved_dir}/problem_6_{vars6}.png")
 
     rospy.spin()
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description = 'Running vehicle with pedestrain detection')
