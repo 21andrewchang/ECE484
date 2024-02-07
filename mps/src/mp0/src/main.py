@@ -68,8 +68,10 @@ def run_model(d_safe = 15,v_0 = 10, a_b = 5, t_react = 0):
     t = [0]
     x1 = []
     x2 = []
-    d = []
-    
+    d_actual = []
+    d_sensor = []
+
+
     while not rospy.is_shutdown():
         rate.sleep()  # Wait a while before trying to get a new state
 
@@ -92,8 +94,9 @@ def run_model(d_safe = 15,v_0 = 10, a_b = 5, t_react = 0):
         t.append(t[-1] + 0.01)
         x1.append(currState.pose.position.x)
         x2.append(pedPosition[0] if pedPosition != 0 else 0)
-        d.append(distance if distance != None else 0) 
-
+        d_actual.append(60 - currState.pose.position.x) 
+        d_sensor.append(pedPosition[0] - currState.pose.position.x if pedPosition != 0 else 0) 
+        
         # Print current position of the vehicle
         # print(safe,distance,currState.pose.position.x,currState.pose.position.y)
         
@@ -130,41 +133,80 @@ def run_model(d_safe = 15,v_0 = 10, a_b = 5, t_react = 0):
             if model.stopped:
                 rospy.signal_shutdown('Vehicle Stopped')
                 
-
-    # Problem 5 plot x1, x2, d respect to t
-    vars5 = f"dsense-{d_sense}_v0-{v_0}_ab-{a_b}_treact-{t_react}"
     problem_saved_dir = f'{os.getcwd()}/problem-answer'
     if not os.path.isdir(problem_saved_dir):
-        os.mkdir(problem_saved_dir)
+        os.makedirs(problem_saved_dir)
+    if not os.path.isdir(f"{problem_saved_dir}/trajectory"):
+        os.makedirs(f"{problem_saved_dir}/trajectory")
+        
+            
+    # Problem 5 plot x1, x2, d respect to t
+    name = f"dsense-{d_sense}_v0-{v_0}_ab-{a_b}_treact-{t_react}"
     plt.plot(t[1:], x1, label='x1')
     plt.plot(t[1:], x2, label='x2')
-    plt.title(f'Problem 5')
+    plt.title(f'Simulation Trajectory\n{name}')
     plt.xlabel('Time t (sec)')
     plt.ylabel('Variables')
     plt.legend()
-    plt.savefig(f"{problem_saved_dir}/problem_5_{vars5}.png")
+    plt.savefig(f"{problem_saved_dir}/trajectory/{name}.png")
     
-    # Problem 6 plot final d(t)
-    vars6 = f"dsense-{d_sense}_ab-{a_b}_treact-{t_react}"
-    problem_6_path = f"{problem_saved_dir}/problem_6_{vars6}.xlsx"
-    last_d_idx = np.where(np.array(d) != 0)[0][-1]
-    last_d = np.array(d)[last_d_idx]
-    data = None
-    if not os.path.isfile(problem_6_path):
-        data = np.array([[v_0, last_d]])
-    else:
-        data = pd.read_excel(problem_6_path).to_numpy()
-        data = np.append(data, np.array([[v_0, last_d]]), axis=0)
-        data = np.sort(data, axis=0)
-    pd.DataFrame(data, columns=['v_0', 'd(t)']).to_excel(problem_6_path, index=False)
-    plt.cla()
-    plt.plot(data[:, 0], data[:, 1], 'ro')
-    plt.plot(data[:, 0], data[:, 1], 'k--')
-    plt.title('Problem 6')
-    plt.xlabel('v_0')
-    plt.ylabel('d(t)')
-    plt.savefig(f"{problem_saved_dir}/problem_6_{vars6}.png")
 
+    # Problem 6 plot final d(t)   
+    # problem_6_path = f"{problem_saved_dir}/problem_6.xlsx"
+    # last_d = d_actual[-1]
+    # data = None
+    # if not os.path.isfile(problem_6_path):
+    #     data = np.array([[v_0, last_d, d_sense, a_b, t_react]])
+    # else:
+    #     data = pd.read_excel(problem_6_path).to_numpy()
+    #     data = np.append(data, np.array([[v_0, last_d, d_sense, a_b, t_react]]), axis=0)
+    #     data_sorted_idx = np.argsort(data[:, 0])
+    #     data = data[data_sorted_idx]
+    # pd.DataFrame(data, columns=['v_0', 'd(t)', 'd_sense', 'a_b', 't_react']).to_excel(problem_6_path, index=False)
+    # all_d_sense = list(set(data[:, 2]))
+    # all_d_sense.sort()
+    # color = {0:'r', 1:'b', 2:'g', 3:'m'}
+    # plt.cla()
+    # for i, j in enumerate(all_d_sense):
+    #     data_partitioned = data[np.where(data[:, 2] == j)[0], :]
+    #     plt.plot(data_partitioned[:, 0], data_partitioned[:, 1], f'{color[i]}o', label=f'd_sense={j}, a_b={a_b}, t_react={t_react}')
+    #     plt.plot(data_partitioned[:, 0], data_partitioned[:, 1], f'{color[i]}--')
+    # plt.axhline(y=0, color='k', linestyle='--')
+    # plt.title(f'Comparison of d(t)\na_b={a_b} t_react={t_react}"')
+    # plt.xlabel('v_0')
+    # plt.ylabel('d(t) = x2(t) - x1(t)')
+    # plt.xlim(0, 24)
+    # plt.legend()
+    # plt.savefig(f"{problem_saved_dir}/problem_6.png")
+
+
+    # Problem 7 plot final d(t)   
+    problem_7_path = f"{problem_saved_dir}/problem_7.xlsx"
+    last_d = d_actual[-1]
+    data = None
+    if not os.path.isfile(problem_7_path):
+        data = np.array([[v_0, last_d, d_sense, a_b, t_react]])
+    else:
+        data = pd.read_excel(problem_7_path).to_numpy()
+        # data = np.append(data, np.array([[v_0, last_d, d_sense, a_b, t_react]]), axis=0)
+        data_sorted_idx = np.argsort(data[:, 4])
+        data = data[data_sorted_idx]
+    pd.DataFrame(data, columns=['v_0', 'd(t)', 'd_sense', 'a_b', 't_react']).to_excel(problem_7_path, index=False)
+    a_b = list(set(data[:, 3]))
+    a_b.sort()
+    color = {0:'r', 1:'b', 2:'g', 3:'m', 4:'k'}
+    plt.cla()
+    for i, j in enumerate(a_b):
+        data_partitioned = data[np.where(data[:, 3] == j)[0], :]
+        plt.plot(data_partitioned[:, 4], data_partitioned[:, 1], f'{color[i]}o', label=f'd_sense={d_sense}, v_0={v_0}, a_b={j}')
+        plt.plot(data_partitioned[:, 4], data_partitioned[:, 1], f'{color[i]}--')
+    plt.axhline(y=0, color='k', linestyle='--')
+    plt.title(f'Comparison of d(t)\nd_sense={d_sense} v_0={v_0}')
+    plt.xlabel('t_react')
+    plt.ylabel('d(t) = x2(t) - x1(t)')
+    plt.legend(loc='upper center', bbox_to_anchor=(0.5, -0.15), ncol=2)
+    plt.tight_layout()
+    plt.savefig(f"{problem_saved_dir}/problem_7.png")
     rospy.spin()
 
 
