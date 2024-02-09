@@ -181,32 +181,32 @@ def run_model(d_safe = 15,v_0 = 10, a_b = 5, t_react = 0):
 
 
     # Problem 7 plot final d(t)   
-    problem_7_path = f"{problem_saved_dir}/problem_7.xlsx"
-    last_d = d_actual[-1]
-    data = None
-    if not os.path.isfile(problem_7_path):
-        data = np.array([[v_0, last_d, d_sense, a_b, t_react]])
-    else:
-        data = pd.read_excel(problem_7_path).to_numpy()
-        # data = np.append(data, np.array([[v_0, last_d, d_sense, a_b, t_react]]), axis=0)
-        data_sorted_idx = np.argsort(data[:, 4])
-        data = data[data_sorted_idx]
-    pd.DataFrame(data, columns=['v_0', 'd(t)', 'd_sense', 'a_b', 't_react']).to_excel(problem_7_path, index=False)
-    a_b = list(set(data[:, 3]))
-    a_b.sort()
-    color = {0:'r', 1:'b', 2:'g', 3:'m', 4:'k'}
-    plt.cla()
-    for i, j in enumerate(a_b):
-        data_partitioned = data[np.where(data[:, 3] == j)[0], :]
-        plt.plot(data_partitioned[:, 4], data_partitioned[:, 1], f'{color[i]}o', label=f'd_sense={d_sense}, v_0={v_0}, a_b={j}')
-        plt.plot(data_partitioned[:, 4], data_partitioned[:, 1], f'{color[i]}--')
-    plt.axhline(y=0, color='k', linestyle='--')
-    plt.title(f'Comparison of d(t)\nd_sense={d_sense} v_0={v_0}')
-    plt.xlabel('t_react')
-    plt.ylabel('d(t) = x2(t) - x1(t)')
-    plt.legend(loc='upper center', bbox_to_anchor=(0.5, -0.15), ncol=2)
-    plt.tight_layout()
-    plt.savefig(f"{problem_saved_dir}/problem_7.png")
+    # problem_7_path = f"{problem_saved_dir}/problem_7.xlsx"
+    # last_d = d_actual[-1]
+    # data = None
+    # if not os.path.isfile(problem_7_path):
+    #     data = np.array([[v_0, last_d, d_sense, a_b, t_react]])
+    # else:
+    #     data = pd.read_excel(problem_7_path).to_numpy()
+    #     # data = np.append(data, np.array([[v_0, last_d, d_sense, a_b, t_react]]), axis=0)
+    #     data_sorted_idx = np.argsort(data[:, 4])
+    #     data = data[data_sorted_idx]
+    # pd.DataFrame(data, columns=['v_0', 'd(t)', 'd_sense', 'a_b', 't_react']).to_excel(problem_7_path, index=False)
+    # a_b = list(set(data[:, 3]))
+    # a_b.sort()
+    # color = {0:'r', 1:'b', 2:'g', 3:'m', 4:'k'}
+    # plt.cla()
+    # for i, j in enumerate(a_b):
+    #     data_partitioned = data[np.where(data[:, 3] == j)[0], :]
+    #     plt.plot(data_partitioned[:, 4], data_partitioned[:, 1], f'{color[i]}o', label=f'd_sense={d_sense}, v_0={v_0}, a_b={j}')
+    #     plt.plot(data_partitioned[:, 4], data_partitioned[:, 1], f'{color[i]}--')
+    # plt.axhline(y=0, color='k', linestyle='--')
+    # plt.title(f'Comparison of d(t)\nd_sense={d_sense} v_0={v_0}')
+    # plt.xlabel('t_react')
+    # plt.ylabel('d(t) = x2(t) - x1(t)')
+    # plt.legend(loc='upper center', bbox_to_anchor=(0.5, -0.15), ncol=2)
+    # plt.tight_layout()
+    # plt.savefig(f"{problem_saved_dir}/problem_7.png")
     rospy.spin()
 
 
