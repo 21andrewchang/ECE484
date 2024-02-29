@@ -34,12 +34,14 @@ class vehicleController():
         return resp
 
 
-    # Tasks 1: Read the documentation https://docs.ros.org/en/fuerte/api/gazebo/html/msg/ModelState.html
-    #       and extract yaw, velocity, vehicle_position_x, vehicle_position_y
-    # Hint: you may use the the helper function(quaternion_to_euler()) we provide to convert from quaternion to euler
+    '''
+    https://docs.ros.org/en/fuerte/api/gazebo/html/msg/ModelState.html
+    Tasks 1: Read the documentation 
+             Extract yaw, velocity, vehicle_position_x, vehicle_position_y
+    Hint: you may use the the helper function(quaternion_to_euler()) we provide 
+          to convert from quaternion to euler
+    '''
     def extract_vehicle_info(self, currentPose):
-
-        ####################### TODO: Your TASK 1 code starts Here #######################
         pos_x, pos_y, vel, yaw = 0, 0, 0, 0
         vel = self.prev_vel
 
@@ -55,25 +57,23 @@ class vehicleController():
 
         return pos_x, pos_y, vel, yaw # note that yaw is in radian
 
-    # Task 2: Longtitudal Controller
-    # Based on all unreached waypoints, and your current vehicle state, decide your velocity
+    '''
+    Task 2: Longtitudal Controller
+    Based on all unreached waypoints, and your current vehicle state, decide your velocity
+    '''
     def longititudal_controller(self, curr_x, curr_y, curr_vel, curr_yaw, future_unreached_waypoints):
-
-        ####################### TODO: Your TASK 2 code starts Here #######################
         target_velocity = 10
 
 
-        ####################### TODO: Your TASK 2 code ends Here #######################
         return target_velocity
 
 
-    # Task 3: Lateral Controller (Pure Pursuit)
+    '''
+    Task 3: Lateral Controller (Pure Pursuit)
+    '''
     def pure_pursuit_lateral_controller(self, curr_x, curr_y, curr_yaw, target_point, future_unreached_waypoints):
-
-        ####################### TODO: Your TASK 3 code starts Here #######################
         target_steering = 0
 
-        ####################### TODO: Your TASK 3 code starts Here #######################
         return target_steering
 
 
@@ -87,12 +87,9 @@ class vehicleController():
         # Output: None
 
         curr_x, curr_y, curr_vel, curr_yaw = self.extract_vehicle_info(currentPose)
-
         # Acceleration Profile
         if self.log_acceleration:
             acceleration = (curr_vel- self.prev_vel) * 100 # Since we are running in 100Hz
-
-
 
         target_velocity = self.longititudal_controller(curr_x, curr_y, curr_vel, curr_yaw, future_unreached_waypoints)
         target_steering = self.pure_pursuit_lateral_controller(curr_x, curr_y, curr_yaw, target_point, future_unreached_waypoints)
