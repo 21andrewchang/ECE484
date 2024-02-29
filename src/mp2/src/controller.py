@@ -38,7 +38,7 @@ class vehicleController():
     https://docs.ros.org/en/fuerte/api/gazebo/html/msg/ModelState.html
     Tasks 1: Read the documentation 
              Extract yaw, velocity, vehicle_position_x, vehicle_position_y
-    Hint: you may use the the helper function(quaternion_to_euler()) we provide 
+    Hint: you may use the the helper function(quaternion_to_euler()) we provide
           to convert from quaternion to euler
     '''
     def extract_vehicle_info(self, currentPose):
@@ -62,10 +62,30 @@ class vehicleController():
     Based on all unreached waypoints, and your current vehicle state, decide your velocity
     '''
     def longititudal_controller(self, curr_x, curr_y, curr_vel, curr_yaw, future_unreached_waypoints):
-        target_velocity = 10
+        checkpoints = curr_vel
+        target_velocity = 12
+        braking_velocity = 8
+        upcoming_x, upcoming_y = [], []
+        x_straight, y_straight = False, False
+        # check future reachable points based on velocity
+        for point in future_unreached_waypoints[:checkpoints]:
+            x = point[0]
+            y = point[1]
+            upcoming_x.append(x)
+            upcoming_y.append(y)
+        # checks if all future x/y points are same
+        if len(upcoming_x) > 0:
+            x_straight = upcoming_x.count(upcoming_x[0]) == len(upcoming_x)
+        if len(upcoming_y) > 0:
+            y_straight = upcoming_x.count(upcoming_y[0]) == len(upcoming_y)
+        # return velocity
+        if x_straight and y_straight:
+            return target_velocity
+        return braking_velocity 
 
 
-        return target_velocity
+
+
 
 
     '''
@@ -85,7 +105,6 @@ class vehicleController():
         #   target_point: [target_x, target_y]
         #   future_unreached_waypoints: a list of future waypoints[[target_x, target_y]]
         # Output: None
-
         curr_x, curr_y, curr_vel, curr_yaw = self.extract_vehicle_info(currentPose)
         # Acceleration Profile
         if self.log_acceleration:
@@ -93,7 +112,6 @@ class vehicleController():
 
         target_velocity = self.longititudal_controller(curr_x, curr_y, curr_vel, curr_yaw, future_unreached_waypoints)
         target_steering = self.pure_pursuit_lateral_controller(curr_x, curr_y, curr_yaw, target_point, future_unreached_waypoints)
-
 
         #Pack computed velocity and steering angle into Ackermann command
         newAckermannCmd = AckermannDrive()
