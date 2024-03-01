@@ -15,6 +15,8 @@ class vehicleController():
         self.controlPub = rospy.Publisher("/ackermann_cmd", AckermannDrive, queue_size = 1)
         self.prev_vel = 0
         self.L = 1.75 # Wheelbase, can be get from gem_control.py
+        self.accel = []
+        self.time = []
         self.log_acceleration = False
 
     def getModelState(self):
@@ -56,46 +58,91 @@ class vehicleController():
         yaw = euler[2]
 
         return pos_x, pos_y, vel, yaw # note that yaw is in radian
-
+    
+    
     '''
     Task 2: Longtitudal Controller
     Based on all unreached waypoints, and your current vehicle state, decide your velocity
     '''
+    # def longititudal_controller(self, curr_x, curr_y, curr_vel, curr_yaw, future_unreached_waypoints):
+    #     #turn = self.pure_pursuit_lateral_controller(self, curr_x, curr_y, curr_yaw, future_unreached_waypoints[1], future_unreached_waypoints)
+
+    #     checkpoints = curr_vel
+    #     straight = 12
+    #     sharp_turn = 8
+    #     medium_turn = 9
+    #     upcoming_x, upcoming_y = [], []
+    #     x_straight, y_straight = False, False
+    #     # check future reachable points based on velocity
+    #     for point in future_unreached_waypoints[:checkpoints]:
+    #         x = point[0]
+    #         y = point[1]
+    #         upcoming_x.append(x)
+    #         upcoming_y.append(y)
+    #     # checks if all future x/y points are same
+    #     if len(upcoming_x) > 0:
+    #         x_straight = upcoming_x.count(upcoming_x[0]) == len(upcoming_x)
+    #     if len(upcoming_y) > 0:
+    #         y_straight = upcoming_x.count(upcoming_y[0]) == len(upcoming_y)
+    #     # return velocity
+    #     if x_straight or y_straight:
+    #         return straight
+        
+    #     return sharp_turn
+    
     def longititudal_controller(self, curr_x, curr_y, curr_vel, curr_yaw, future_unreached_waypoints):
-        checkpoints = curr_vel
-        target_velocity = 12
-        braking_velocity = 8
-        upcoming_x, upcoming_y = [], []
-        x_straight, y_straight = False, False
-        # check future reachable points based on velocity
-        for point in future_unreached_waypoints[:checkpoints]:
-            x = point[0]
-            y = point[1]
-            upcoming_x.append(x)
-            upcoming_y.append(y)
-        # checks if all future x/y points are same
-        if len(upcoming_x) > 0:
-            x_straight = upcoming_x.count(upcoming_x[0]) == len(upcoming_x)
-        if len(upcoming_y) > 0:
-            y_straight = upcoming_x.count(upcoming_y[0]) == len(upcoming_y)
-        # return velocity
-        if x_straight and y_straight:
-            return target_velocity
-        return braking_velocity 
+        straight_speed = 13
+        slow_corner_speed = 8
+        medium_corner_speed = 11
+        smedium_corner_speed = 9
+        
+        # Calculate heading angles for the upcoming segments
+        heading_angles = []
+        for i in range(len(future_unreached_waypoints) - 1):
+            dx = future_unreached_waypoints[i+1][0] - future_unreached_waypoints[i][0]
+            dy = future_unreached_waypoints[i+1][1] - future_unreached_waypoints[i][1]
+            heading_angle_i = np.arctan2(dy, dx)
+            heading_angles.append(heading_angle_i)
+        
+        # Check if the upcoming segment is straight, a medium corner, or a slow corner based on the difference in heading angles
+        for i in range(len(heading_angles) - 2):
+            angle_diff = np.abs(heading_angles[i+2] - heading_angles[i])
+            print('angledif:', angle_diff)
+            if (angle_diff < 0.30 and angle_diff > 0.1):  # Adjust this threshold as needed for medium corners
+                print(medium_corner_speed)
+                return medium_corner_speed
+            elif (angle_diff >= 0.30 and angle_diff < 0.45):  # Adjust this threshold as needed for medium corners
+                print(smedium_corner_speed)
+                return smedium_corner_speed
+            elif angle_diff >= 0.45:  # Adjust this threshold as needed for medium corners
+                print(slow_corner_speed)
+                return slow_corner_speed
+            else:
+                # Return slow speed if a corner is detected
+                print(straight_speed)
+                return straight_speed
+        return 13
+
+        
 
     '''
     Task 3: Lateral Controller (Pure Pursuit)
     '''
     def pure_pursuit_lateral_controller(self, curr_x, curr_y, curr_yaw, target_point, future_unreached_waypoints):
         wheelbase = 2 * self.L
-        la_point_x = future_unreached_waypoints[4][0]
-        la_point_y = future_unreached_waypoints[4][1]
+        #ang_v_x = GetModelState().twist.angular.x
+        #ang_v_y = GetModelState().twist.angular.y
+        la_point_x = target_point[0]
+        la_point_y = target_point[1]
+        #dot_product = ang_v_x
+        #print('lookahead point:', future_unreached_waypoints[4])
         ld = distance = math.sqrt((la_point_x - curr_x)**2 + (la_point_y - curr_y)**2)
         dx = la_point_x - curr_x
         dy = la_point_y - curr_y
-        alpha = math.atan2(dx, dy)
+        alpha = math.atan2(la_point_y-curr_y, la_point_x-curr_x) - curr_yaw
         sin_alpha = math.sin(alpha)
         target_steering = math.atan((wheelbase * sin_alpha)/(ld))
+        #print(target_steering)
 
         return target_steering
 
@@ -112,6 +159,14 @@ class vehicleController():
         # Acceleration Profile
         if self.log_acceleration:
             acceleration = (curr_vel- self.prev_vel) * 100 # Since we are running in 100Hz
+            if abs(acceleration) > 5:
+                self.accel_ct += 1
+            self.accel.append(acceleration)
+            if len(self.time) == 0:
+                self.time.append(1/100.0)
+            else:
+                self.time.append(self.time[-1] + 1/100.0)
+        self.prev_vel = curr_vel
 
         target_velocity = self.longititudal_controller(curr_x, curr_y, curr_vel, curr_yaw, future_unreached_waypoints)
         target_steering = self.pure_pursuit_lateral_controller(curr_x, curr_y, curr_yaw, target_point, future_unreached_waypoints)

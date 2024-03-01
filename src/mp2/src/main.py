@@ -1,12 +1,20 @@
 import rospy
 import numpy as np
 import argparse
-
+import matplotlib.pyplot as plt
 from gazebo_msgs.msg import  ModelState
 from controller import vehicleController
 import time
 from waypoint_list import WayPoints
-from util import euler_to_quaternion, quaternion_to_euler
+from util import euler_to_quaternion, quaternion_to_euler 
+
+def plot(time,accel):
+    plt.figure()
+    plt.plot(time, accel, '-r')
+    plt.title("accel vs time")
+    plt.xlabel("time")
+    plt.ylabel("accel")
+    plt.show()
 
 def run_model():
     rospy.init_node("model_dynamics")
@@ -57,6 +65,7 @@ def run_model():
                 print("Reached all the waypoints")
                 total_time = (cur_time - start_time).to_sec()
                 print(total_time)
+                plot(controller.time, controller.accel)
                 return True, pos_idx, total_time
 
             target_x, target_y = pos_list[pos_idx]
