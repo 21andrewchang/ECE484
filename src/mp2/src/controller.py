@@ -83,16 +83,11 @@ class vehicleController():
             return target_velocity
         return braking_velocity 
 
-
-
-
-
-
     '''
     Task 3: Lateral Controller (Pure Pursuit)
     '''
     def pure_pursuit_lateral_controller(self, curr_x, curr_y, curr_yaw, target_point, future_unreached_waypoints):
-        target_steering = 0
+        target_steering = 0 
 
         return target_steering
 
