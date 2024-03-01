@@ -87,7 +87,15 @@ class vehicleController():
     Task 3: Lateral Controller (Pure Pursuit)
     '''
     def pure_pursuit_lateral_controller(self, curr_x, curr_y, curr_yaw, target_point, future_unreached_waypoints):
-        target_steering = 0 
+        wheelbase = 2 * self.L
+        la_point_x = future_unreached_waypoints[4][0]
+        la_point_y = future_unreached_waypoints[4][1]
+        ld = distance = math.sqrt((la_point_x - curr_x)**2 + (la_point_y - curr_y)**2)
+        dx = la_point_x - curr_x
+        dy = la_point_y - curr_y
+        alpha = math.atan2(dx, dy)
+        sin_alpha = math.sin(alpha)
+        target_steering = math.atan((wheelbase * sin_alpha)/(ld))
 
         return target_steering
 
