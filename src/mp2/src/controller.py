@@ -45,13 +45,13 @@ class vehicleController():
         pos_x, pos_y, vel, yaw = 0, 0, 0, 0
         vel = self.prev_vel
 
-        pos_x = currentPose.position.x
-        pos_y = currentPose.position.y
+        pos_x = currentPose.pose.position.x
+        pos_y = currentPose.pose.position.y
 
-        q_x = currentPose.orientation.x
-        q_y = currentPose.orientation.y
-        q_z = currentPose.orientation.z
-        q_w =currentPose.orientation.w
+        q_x = currentPose.pose.orientation.x
+        q_y = currentPose.pose.orientation.y
+        q_z = currentPose.pose.orientation.z
+        q_w =currentPose.pose.orientation.w
         euler = quaternion_to_euler(q_x, q_y, q_z, q_w) # [roll, pitch, yaw]
         yaw = euler[2]
 
