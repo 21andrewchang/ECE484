@@ -27,17 +27,16 @@ class particleFilter:
         particles = list()
 
         ##### TODO:  #####
-        # Modify the initial particle distribution to be within the top-right quadrant of the world, and compare the performance with the whole map distribution.
+        # Modify the initial particle distribution to be within the top-right 
+        # quadrant of the world, and compare the performance with the whole map distribution.
         for i in range(num_particles):
-
             # (Default) The whole map
             x = np.random.uniform(0, world.width)
             y = np.random.uniform(0, world.height)
 
-
             ## first quadrant
-            # x = 
-            # y =
+            # x = np.random.uniform(world.width/2, world.width)
+            # y = np.random.uniform(world.height/2, world.height)
 
             particles.append(Particle(x = x, y = y, maze = world, sensor_limit = sensor_limit))
 
